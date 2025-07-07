@@ -5,6 +5,9 @@ name = "pypi"
 
 [packages]
 h3 = "*"
+shapely = "*"
+pydantic = "*"
+pydantic-settings = "*"
 
 [dev-packages]
 
