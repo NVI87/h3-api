@@ -8,7 +8,9 @@ from settings import settings
 
 
 class HexIndexService:
-    def __init__(self, latitude, longitude, radius):
+    # методы не делал асинхронными, потому что все делается из памяти
+    # блокировки (типа aiorwlock) не расставлял, потому что сценарии не предполагают одновременное чтение/запись
+    def __init__(self, latitude: float, longitude: float, radius: float):
         self.hexes: list[list] = self.create_hexes(latitude, longitude, radius)
 
     def as_dict(self):
@@ -43,7 +45,13 @@ class HexIndexService:
             cells |= set(ring_cells)
             ring_radius += 1
 
-        return [[cell, random.randint(-120, -47), random.randint(1,100)] for cell in cells]
+        return [
+            [
+                cell,
+                random.randint(settings.level_border_left, settings.level_border_right),
+                random.randint(settings.cell_id_from,settings.cell_id_to)
+            ] for cell in cells
+        ]
 
     def hex(self, parent_hex: str) -> list:
         """
@@ -96,41 +104,39 @@ class HexIndexServiceCached(HexIndexService):
         return self._hexes_dict
 
 
-if __name__ == "__main__":
-    from datetime import datetime
-    service_1 = HexIndexService(56, 38, 7)
-    service_2 = HexIndexServiceCached(56, 38, 7)
-
-    # .hex
-    timer = datetime.utcnow()
-    eval_hex = service_1.hex('8a11aa648367fff')
-    print(f"len(worker.hex('8a11aa648367fff')): {len(eval_hex)} (service_1: {datetime.utcnow() - timer})")
-
-    timer = datetime.utcnow()
-    eval_hex = service_2.hex('8a11aa648367fff')
-    print(f"len(worker.hex('8a11aa648367fff')): {len(eval_hex)} (service_2: {datetime.utcnow() - timer})")
-
-    # .bbox
-    polygon = Polygon(((56.035953, 37.911440), (56.280315, 37.589786), (56.0, 37.182514), (56.0, 38.0)))
-
-    timer = datetime.utcnow()
-    eval_bbox = service_1.bbox(polygon)
-    print(f"len(worker.bbox(polygon)): {len(eval_bbox)} (service_1: {datetime.utcnow() - timer})")
-
-    timer = datetime.utcnow()
-    eval_bbox = service_2.bbox(polygon)
-    print(f"len(worker.bbox(polygon)): {len(eval_bbox)} (service_2: {datetime.utcnow() - timer})")
-
-    # .avg
-    parent_res = 6
-
-    timer = datetime.utcnow()
-    eval_avg = service_1.avg(parent_res)
-    print(f"len(worker.avg(6)): {len(eval_avg)} (service_1: {datetime.utcnow() - timer})")
-
-    timer = datetime.utcnow()
-    eval_avg = service_2.avg(parent_res)
-    print(f"len(worker.avg(6)): {len(eval_avg)} (service_2: {datetime.utcnow() - timer})")
-
-
-
+# if __name__ == "__main__":
+#     # Проверки оставил
+#     from datetime import datetime
+#     service_1 = HexIndexService(56, 38, 7)
+#     service_2 = HexIndexServiceCached(56, 38, 7)
+#
+#     # .hex
+#     timer = datetime.utcnow()
+#     eval_hex = service_1.hex('8a11aa648367fff')
+#     print(f"len(worker.hex('8a11aa648367fff')): {len(eval_hex)} (service_1: {datetime.utcnow() - timer})")
+#
+#     timer = datetime.utcnow()
+#     eval_hex = service_2.hex('8a11aa648367fff')
+#     print(f"len(worker.hex('8a11aa648367fff')): {len(eval_hex)} (service_2: {datetime.utcnow() - timer})")
+#
+#     # .bbox
+#     polygon = Polygon(((56.035953, 37.911440), (56.280315, 37.589786), (56.0, 37.182514), (56.0, 38.0)))
+#
+#     timer = datetime.utcnow()
+#     eval_bbox = service_1.bbox(polygon)
+#     print(f"len(worker.bbox(polygon)): {len(eval_bbox)} (service_1: {datetime.utcnow() - timer})")
+#
+#     timer = datetime.utcnow()
+#     eval_bbox = service_2.bbox(polygon)
+#     print(f"len(worker.bbox(polygon)): {len(eval_bbox)} (service_2: {datetime.utcnow() - timer})")
+#
+#     # .avg
+#     parent_res = 6
+#
+#     timer = datetime.utcnow()
+#     eval_avg = service_1.avg(parent_res)
+#     print(f"len(worker.avg(6)): {len(eval_avg)} (service_1: {datetime.utcnow() - timer})")
+#
+#     timer = datetime.utcnow()
+#     eval_avg = service_2.avg(parent_res)
+#     print(f"len(worker.avg(6)): {len(eval_avg)} (service_2: {datetime.utcnow() - timer})")

@@ -8,6 +8,8 @@ h3 = "*"
 shapely = "*"
 pydantic = "*"
 pydantic-settings = "*"
+fastapi = "*"
+uvicorn = "*"
 
 [dev-packages]
 
